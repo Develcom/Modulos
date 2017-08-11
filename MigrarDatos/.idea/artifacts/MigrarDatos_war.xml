@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="MigrarDatos:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="MigrarDatos-1.0.war">
+      <element id="artifact" artifact-name="MigrarDatos:war exploded" />
+    </root>
+  </artifact>
+</component>

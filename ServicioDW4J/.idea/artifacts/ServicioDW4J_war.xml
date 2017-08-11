@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="ServicioDW4J:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="ServicioDW4J-1.0.war">
+      <element id="artifact" artifact-name="ServicioDW4J:war exploded" />
+    </root>
+  </artifact>
+</component>
