@@ -23,17 +23,17 @@
 
         <triggeringPolicy
             class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <MaxFileSize>2MB</MaxFileSize>
+            <MaxFileSize>100MB</MaxFileSize>
         </triggeringPolicy>
     </appender>
     
 <!--    <logger name="org.springframework.scheduling">
         <level value="info" />
     </logger>-->
-    <logger name="com.develcom" level="DEBUG" >
+<!--    <logger name="com.develcom" level="DEBUG" >
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE" />
-    </logger>
+    </logger>-->
     <root level="DEBUG">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE" />

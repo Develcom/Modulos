@@ -56,11 +56,6 @@ public class RecuperaBean {
     @Autowired
     private AppJDBC appJDBC;
 
-    @Autowired
-    private Expediente expediente;
-
-    private int idLibreria;
-    private int idCategoria;
     private String rutaTemp = "";
 
     public String restaurarDatos() {
@@ -106,23 +101,26 @@ public class RecuperaBean {
     private void agregarExpedientes() throws IOException, FileNotFoundException, ClassNotFoundException {
 
         List<Expediente> expedientes;
-        List<Indice> indices = new ArrayList<>(), indExterno = new ArrayList<>();
-        String sql, sqlAdd;
+        List<Indice> indices, indExterno;
+        String sql, sqlAdd, tmpLib = "", tmpCat = "";
         SqlRowSet rsBuscar;
         Object[] params;
-        int registro = 0;
+        int registro = 0, idLibreria = 0, idCategoria = 0;
         Indice indice;
+        Expediente expediente;
 
         LOG.info("agregando expedientes");
 
         expedientes = desSerializar("expedientes");
 
-        sqlAdd = "insert into expediente (expediente, id_indice, valor, fecha_indice, id_libreria, id_categoria) "
-                + "values (?, ?, ?, ?, ?, ?)";
-
         for (Expediente expe : expedientes) {
 
-            if (idLibreria == 0 && idCategoria == 0) {
+            if ((!tmpLib.equalsIgnoreCase(expe.getLibreria()))
+                    && (!tmpCat.equalsIgnoreCase(expe.getCategoria()))) {
+
+                tmpLib = expe.getLibreria();
+                tmpCat = expe.getCategoria();
+
                 sql = "select distinct l.id_libreria, c.id_categoria "
                         + "from libreria l inner join categoria c on c.id_libreria=l.id_libreria "
                         + "where libreria='" + expe.getLibreria() + "' and categoria='" + expe.getCategoria() + "'";
@@ -133,6 +131,7 @@ public class RecuperaBean {
                     idLibreria = rsBuscar.getInt("id_libreria");
                     idCategoria = rsBuscar.getInt("id_categoria");
                 }
+
             }
 
             sql = "select * from expedientes where expediente='" + expe.getExpediente() + "'";
@@ -141,11 +140,14 @@ public class RecuperaBean {
 
             if (!rsBuscar.next()) {
 
+                expediente = new Expediente();
+
                 expediente.setExpediente(expe.getExpediente());
 
                 sql = "select * from indices where id_categoria=" + idCategoria;
                 rsBuscar = appJDBC.buscar(sql);
 
+                indices = new ArrayList<>();
                 while (rsBuscar.next()) {
                     indice = new Indice();
                     indice.setClave(rsBuscar.getString("clave"));
@@ -157,6 +159,7 @@ public class RecuperaBean {
 
                 }
 
+                indExterno = new ArrayList<>();
                 for (Indice ind : expe.getIndices()) {
                     for (Indice indB : indices) {
                         if (indB.getIndice().equals(ind.getIndice())) {
@@ -166,22 +169,33 @@ public class RecuperaBean {
                         }
                     }
                 }
+
                 expediente.setIndices(indExterno);
 
                 for (Indice indAdd : expediente.getIndices()) {
 
                     if ("FECHA".equalsIgnoreCase(indAdd.getTipo())) {
-                        params = new Object[]{expediente.getExpediente(), indAdd.getIdIndice(), indAdd.getValor(), null, idLibreria, idCategoria};
+
+                        sqlAdd = "insert into expedientes (expediente, id_indice, fecha_indice, id_libreria, id_categoria) "
+                                + "values (?, ?, ?, ?, ?)";
                     } else {
-                        params = new Object[]{expediente.getExpediente(), indAdd.getIdIndice(), null, indAdd.getValor(), idLibreria, idCategoria};
+
+                        sqlAdd = "insert into expedientes (expediente, id_indice, valor, id_libreria, id_categoria) "
+                                + "values (?, ?, ?, ?, ?)";
                     }
+
+                    params = new Object[]{expediente.getExpediente(), indAdd.getIdIndice(), indAdd.getValor(), idLibreria, idCategoria};
 
                     registro = registro + appJDBC.agregarRegistro(sqlAdd, params);
 
                     LOG.info("registro agregado numero " + registro + " expediente " + expediente.getExpediente()
                             + " indice " + indAdd.getIndice() + " valor " + indAdd.getValor());
                 }
+            } else {
+                LOG.info("Expediente registrado " + expe.getExpediente());
             }
+
+            System.gc();
         }
 
         LOG.info("finalizado agregar expediente");
@@ -193,7 +207,7 @@ public class RecuperaBean {
         List<DatoAdicionalTipoDocumento> datds;
         SqlRowSet rsBuscar;
         Object[] params;
-        int registro = 0, idIndiceDA = 0, idTipoDoc;
+        int registro = 0, idIndiceDA = 0, idTipoDoc = 0;
         String sql, sqlAdd, tmpTD = "", tmpIDA = "";
 
         LOG.info("agregando datos adicionales");
@@ -215,7 +229,8 @@ public class RecuperaBean {
 
             if (!tmpIDA.equalsIgnoreCase(da.getIndiceAdicional())) {
                 tmpIDA = da.getIndiceAdicional();
-                sql = "select id_dato_adicional from dato_adicional where indice_adicional ='" + da.getIndiceAdicional().trim() + "'";
+                sql = "select id_dato_adicional from dato_adicional "
+                        + "where indice_adicional ='" + da.getIndiceAdicional().trim() + "' and id_documento="+idTipoDoc;
                 rsBuscar = appJDBC.buscar(sql);
 
                 rsBuscar.next();
@@ -289,13 +304,13 @@ public class RecuperaBean {
 
                 rutas = infoDoc.getRutaArchivo().split("/");
                 rutaRaiz = prop.getProperty("rutaRaiz");
-                
+
                 herramientas.crearRutas(rutas, rutaRaiz);
-                
-                origen = new File(rutaTemp+"/"+infoDoc.getNombreArchivo());
-                destino = new File(rutaRaiz+"/"+infoDoc.getRutaArchivo()+"/"+infoDoc.getNombreArchivo());
+
+                origen = new File(rutaTemp + "/" + infoDoc.getNombreArchivo());
+                destino = new File(rutaRaiz + "/" + infoDoc.getRutaArchivo() + "/" + infoDoc.getNombreArchivo());
                 herramientas.copiarArchivos(origen, destino);
-                LOG.info("se copio el archivo "+origen+" hacia "+destino);
+                LOG.info("se copio el archivo " + origen + " hacia " + destino);
 
             }
         }
@@ -394,6 +409,5 @@ public class RecuperaBean {
 
         return obj;
     }
-    
-    
+
 }

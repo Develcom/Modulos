@@ -51,7 +51,6 @@ public class BusquedaBean {
 
 //    @Autowired
 //    private Combo combo;
-
     @Autowired
     private Propiedades propiedades;
 
@@ -60,7 +59,7 @@ public class BusquedaBean {
     private boolean exito;
     private String fechaInicio;
     private String fechaFin;
-    
+
     private List<Expediente> expedientes;
     List<DatoAdicionalTipoDocumento> datds;
     List<InfoDocumento> infoDocumentos;
@@ -108,7 +107,7 @@ public class BusquedaBean {
                         exito = true;
                         fechaInicio = sdf.format(fechaDesde);
                         fechaFin = sdf.format(fechaHasta);
-                    }else{
+                    } else {
                         herramientas.error("Problemas realizando el respaldo");
                     }
                 } else {
@@ -133,7 +132,7 @@ public class BusquedaBean {
         String sql, expe, sqlInd;
         File archivo;
         boolean resp = false;
-        
+
         expedientes = new ArrayList<>();
 
         sql = "select DISTINCT e.expediente, l.libreria, c.categoria from expedientes e "
@@ -167,14 +166,10 @@ public class BusquedaBean {
             rsIndice = appJDBC.buscar(sqlInd);
 
             indices = new ArrayList<>();
-            
+
             while (rsIndice.next()) {
 
                 indice = new Indice();
-
-//                if (rsIndice.getInt("codigo") != 0) {
-//                    indice.setCombo(buscarValoresCombo(rsIndice.getInt("codigo")));
-//                }
 
                 indice.setIndice(rsIndice.getString("indice"));
                 indice.setTipo(rsIndice.getString("tipo"));
@@ -185,6 +180,8 @@ public class BusquedaBean {
                 } else {
                     indice.setValor(rsIndice.getString("valor"));
                 }
+                
+                LOG.info("agregando el indice "+indice.getIndice()+" del expediente "+expediente.getExpediente());
 
                 indices.add(indice);
 
@@ -193,12 +190,8 @@ public class BusquedaBean {
             expediente.setIndices(indices);
 
             expedientes.add(expediente);
-            
-            //LOG.info("expediente agregado "+expediente.getExpediente());
 
-//            if (!indices.isEmpty()) {
-//                indices.clear();
-//            }
+            LOG.info("expediente agregado " + expediente.getExpediente()+" tamaño de los indices "+indices.size());
 
         }
 
@@ -222,8 +215,7 @@ public class BusquedaBean {
         String sql;
         File archivo;
         boolean resp = false;
-        
-        
+
         datds = new ArrayList<>();
 
         LOG.info("fecha desde " + getFechaDesde() + " fecha hasta " + getFechaHasta());
@@ -257,8 +249,9 @@ public class BusquedaBean {
 //                datoAdicionalTipoDocumento.setCombo(buscarValoresCombo(rsBuscar.getInt("codigo")));
 //            }
             datds.add(datoAdicionalTipoDocumento);
-            
-            //LOG.info("dato adicional agregado "+datoAdicionalTipoDocumento.getIndiceAdicional());
+
+            LOG.info("dato adicional agregado " + datoAdicionalTipoDocumento.getIndiceAdicional() 
+                    + " expediente " + datoAdicionalTipoDocumento.getExpediente());
         }
         LOG.info("finalizado el agregar datos adicionales a la lista");
 
@@ -284,9 +277,8 @@ public class BusquedaBean {
         File archivoSer;
         boolean resp = false;
 
-        
         infoDocumentos = new ArrayList<>();
-        
+
         LOG.info("fecha desde " + getFechaDesde() + " fecha hasta " + getFechaHasta());
 
         sql = "select t.tipo_documento, s.subcategoria, i.*, d.* "
@@ -334,7 +326,7 @@ public class BusquedaBean {
             infoDocumento.setVersion(rsBuscar.getInt("version"));
 
             File archivo = new File(infoDocumento.getRutaRaiz() + infoDocumento.getRutaArchivo() + "/" + infoDocumento.getNombreArchivo());
-            //LOG.info("agregando el archivo " + archivo.getName());
+            LOG.info("agregando el archivo " + archivo.getName());
             archivos.add(archivo);
 
             infoDocumentos.add(infoDocumento);
@@ -370,7 +362,6 @@ public class BusquedaBean {
 //
 //        return combos;
 //    }
-
     private <T> String serializar(List<T> list, String nombreArchivo) throws FileNotFoundException, IOException {
 
         Properties prop = propiedades.configuracionCarpeta();
